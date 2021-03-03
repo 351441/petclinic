@@ -1,25 +1,49 @@
-pipeline {
+pipeline{
 	agent any
-	stages{
-    		stage('checkout') {
+	environment {
+		myrepo = 'petclinic'
+		myvar = 'swathi'
+	}	
+	tools {
+		maven 'm3.6'
+	}	
+	stages {
+		stage('checkout'){
 			steps {
-    				git "https://github.com/351441/petclinic.git"
-    			}
+				git "https://github.com/Swathi-cloud-hub/$myrepo"
+			}	
 		}
-    		stage('Build') {
+		stage('Build') {
 			steps {
-    				sh "/var/lib/jenkins/tools/hudson.tasks.Maven_MavenInstallation/M3.6/bin/mvn clean package"
-				}    		
+				sh "mvn clean package"
+				echo "$myvar"
+			}	
 		}
-    		stage('Test') {
-			steps{
-    				junit "target/surefire-reports/*.xml"
-			}    		
-		}
-    		stage('Artifct') {
+		stage('Test Result') {
 			steps {
-    				archiveArtifacts artifacts: "target/*.?ar", followSymlinks: false
-			}
-    		}
- 	}
+				junit "target/surefire-reports/*.xml"
+			}	
+		}	
+		stage('Archeive Artifact') {
+			steps {
+				archiveArtifacts artifacts: "target/*.?ar", followSymlinks: false
+			}	
+		}	
+	}
+	post{
+		success{
+			notify('success')
+		}
+		failure{
+			notify('failed')
+		}
+	}
+}
+def notify(status){
+    emailext (
+      to: "Peruguswathi11@gmail.com",
+      subject: "${status}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+      body: """<p>${status}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+        <p>Check console output at <a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a></p>"""
+    )
 }
